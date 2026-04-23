@@ -1,0 +1,6 @@
+---
+# Variables communes à tous les playbooks
+aws_region: eu-west-3
+project: myapp
+
+# ansible_python_interpreter est défini dans ansible.cfg (interpreter_python)

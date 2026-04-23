@@ -1,0 +1,72 @@
+---
+# Récupère l'URI de l'image depuis le rôle ecr_push (partagée via set_fact)
+# Si le rôle est appelé seul, recalculer l'URI
+- name: Récupérer les infos du compte AWS (si ecr_push n'a pas été joué)
+  amazon.aws.aws_caller_info:
+  register: aws_info
+  when: ecr_image_uri is not defined
+
+- name: Recalculer l'URI de l'image si nécessaire
+  set_fact:
+    ecr_image_uri: "{{ aws_info.account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ project }}/{{ env }}:{{ image_tag }}"
+  when: ecr_image_uri is not defined
+
+# ── Récupérer la task definition courante pour réutiliser sa config ───────────
+- name: Récupérer la task definition actuelle
+  community.aws.ecs_taskdefinition_info:
+    task_definition: "{{ project }}-{{ env }}"
+    region: "{{ aws_region }}"
+  register: current_td
+
+# ── Enregistrer une nouvelle révision avec la nouvelle image ──────────────────
+- name: Enregistrer une nouvelle task definition avec l'image mise à jour
+  community.aws.ecs_taskdefinition:
+    family:         "{{ project }}-{{ env }}"
+    execution_role_arn: "{{ current_td.task_definition.execution_role_arn }}"
+    network_mode:   awsvpc
+    launch_type:    FARGATE
+    cpu:            "{{ current_td.task_definition.cpu }}"
+    memory:         "{{ current_td.task_definition.memory }}"
+    containers:
+      - name: app
+        image: "{{ ecr_image_uri }}"
+        portMappings:
+          - containerPort: 80
+            protocol: tcp
+        logConfiguration: "{{ current_td.task_definition.container_definitions[0].log_configuration }}"
+    state: present
+    region: "{{ aws_region }}"
+  register: new_td
+
+# ── Mettre à jour le service ECS ──────────────────────────────────────────────
+- name: Mettre à jour le service ECS avec la nouvelle révision
+  community.aws.ecs_service:
+    name:            "{{ project }}-{{ env }}-service"
+    cluster:         "{{ project }}-{{ env }}-cluster"
+    task_definition: "{{ new_td.taskdefinition.task_definition_arn }}"
+    force_new_deployment: true
+    region:          "{{ aws_region }}"
+    state: present
+
+# ── Attendre la stabilisation du déploiement ─────────────────────────────────
+- name: Attendre que le déploiement soit stable
+  community.aws.ecs_service_info:
+    cluster: "{{ project }}-{{ env }}-cluster"
+    service:  "{{ project }}-{{ env }}-service"
+    region:   "{{ aws_region }}"
+    details:  true
+  register: svc_info
+  until: >
+    svc_info.services | length > 0 and
+    svc_info.services[0].deployments | length == 1 and
+    svc_info.services[0].deployments[0].status == 'PRIMARY' and
+    svc_info.services[0].deployments[0].runningCount == svc_info.services[0].deployments[0].desiredCount
+  retries: 30
+  delay: 20
+
+- name: Afficher l'état final du service
+  debug:
+    msg: >
+      Service {{ project }}-{{ env }}-service stable :
+      {{ svc_info.services[0].deployments[0].runningCount }}/{{ svc_info.services[0].deployments[0].desiredCount }} tâches actives
+      — image : {{ ecr_image_uri }}

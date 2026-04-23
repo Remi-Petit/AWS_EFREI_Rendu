@@ -1,0 +1,20 @@
+---
+# Playbook principal : build → push ECR → déploiement ECS
+#
+# Usage :
+#   ansible-playbook deploy.yml -e env=prod -e image_tag=1.2.3 -e dockerfile_path=../app
+#   ansible-playbook deploy.yml -e env=test   # image_tag=latest par défaut
+
+- name: Build et push de l'image Docker vers ECR
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: ecr_push
+
+- name: Déploiement de la nouvelle image sur ECS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: ecs_deploy

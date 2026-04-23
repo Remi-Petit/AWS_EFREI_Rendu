@@ -1,0 +1,5 @@
+---
+# Valeurs par défaut — surchargeable via -e
+env:             test
+image_tag:       latest
+dockerfile_path: "."

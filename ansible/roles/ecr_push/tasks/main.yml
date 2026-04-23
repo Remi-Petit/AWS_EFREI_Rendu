@@ -1,0 +1,22 @@
+---
+- name: Récupérer les infos du compte AWS
+  amazon.aws.aws_caller_info:
+  register: aws_info
+
+- name: Calculer l'URI de l'image ECR
+  set_fact:
+    ecr_registry: "{{ aws_info.account }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+    ecr_image_uri: "{{ aws_info.account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ project }}/{{ env }}:{{ image_tag }}"
+
+- name: S'authentifier auprès d'ECR
+  shell: >
+    aws ecr get-login-password --region {{ aws_region }} |
+    docker login --username AWS --password-stdin {{ ecr_registry }}
+  no_log: true
+  changed_when: true
+
+- name: Builder l'image Docker
+  command: docker build -t {{ ecr_image_uri }} {{ dockerfile_path }}
+
+- name: Pousser l'image vers ECR
+  command: docker push {{ ecr_image_uri }}
