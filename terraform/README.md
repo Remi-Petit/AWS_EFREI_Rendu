@@ -97,3 +97,19 @@ vpn_client_cert_arn = "arn:aws:acm:eu-west-3:XXXX:certificate/..."
 - Alarme latence > 1s
 - Notifications par email via SNS
 - Dashboard CloudWatch (CPU, mémoire, requêtes, erreurs, latence)
+
+## Voir le mot de passe pour pgAdmin
+terraform output aurora_endpoints 2>/dev/null || terraform output -json aurora_endpoints 2>/dev/null
+
+aws secretsmanager get-secret-value --secret-id "myapp/test/pgadmin" --region eu-west-3 --query SecretString --output text 2>/dev/null
+
+## Voir le mot de passe PostgreSQL
+python3 -c "
+import json
+with open('terraform.tfstate') as f:
+    s = json.load(f)
+for r in s['resources']:
+    if r['type'] == 'random_password' and r['name'] == 'aurora':
+        for i in r['instances']:
+            print(i.get('index_key'), ':', i['attributes']['result'])
+" 2>&1

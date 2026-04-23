@@ -40,6 +40,13 @@ resource "aws_security_group" "ecs" {
     protocol        = "tcp"
     security_groups = [aws_security_group.alb[each.key].id]
   }
+  # Port 8055 requis pour Directus
+  ingress {
+    from_port       = 8055
+    to_port         = 8055
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb[each.key].id]
+  }
   egress {
     from_port   = 0
     to_port     = 0

@@ -22,18 +22,20 @@
 - name: Enregistrer une nouvelle task definition avec l'image mise à jour
   community.aws.ecs_taskdefinition:
     family:         "{{ project }}-{{ env }}"
-    execution_role_arn: "{{ current_td.task_definition.execution_role_arn }}"
+    execution_role_arn: "{{ current_td.execution_role_arn }}"
     network_mode:   awsvpc
     launch_type:    FARGATE
-    cpu:            "{{ current_td.task_definition.cpu }}"
-    memory:         "{{ current_td.task_definition.memory }}"
+    cpu:            "{{ current_td.cpu }}"
+    memory:         "{{ current_td.memory }}"
     containers:
       - name: app
         image: "{{ ecr_image_uri }}"
         portMappings:
           - containerPort: 80
             protocol: tcp
-        logConfiguration: "{{ current_td.task_definition.container_definitions[0].log_configuration }}"
+        logConfiguration:
+            logDriver: "{{ current_td.container_definitions[0].log_configuration.log_driver }}"
+            options:   "{{ current_td.container_definitions[0].log_configuration.options }}"
     state: present
     region: "{{ aws_region }}"
   register: new_td
@@ -43,7 +45,7 @@
   community.aws.ecs_service:
     name:            "{{ project }}-{{ env }}-service"
     cluster:         "{{ project }}-{{ env }}-cluster"
-    task_definition: "{{ new_td.taskdefinition.task_definition_arn }}"
+    task_definition: "{{ new_td.taskdefinition.taskDefinitionArn }}"
     force_new_deployment: true
     region:          "{{ aws_region }}"
     state: present

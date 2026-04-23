@@ -1,9 +1,7 @@
-# Commandes Terraform
+# Test
+https://directus-test.aws.remipetit.fr
 
-terraform init
+# Prod
+https://directus-app.aws.remipetit.fr
 
-terraform plan
-
-terraform apply
-
-terraform destroy
+aws secretsmanager get-secret-value --secret-id myapp/test/directus --region eu-west-3 --query "SecretString" --output text 2>&1 | python3 -m json.tool

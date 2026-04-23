@@ -1,6 +1,11 @@
 locals {
   azs = ["${var.aws_region}a", "${var.aws_region}b", "${var.aws_region}c"]
 
+  env_subdomains = {
+    prod = "app"
+    test = "test"
+  }
+
   env_config = {
     prod = {
       vpc_cidr       = "10.0.0.0/16"

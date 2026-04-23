@@ -5,6 +5,18 @@ output "alb_dns_names" {
   }
 }
 
+output "custom_domain_urls" {
+  description = "URLs publiques avec nom de domaine"
+  value = {
+    for env, sub in local.env_subdomains : env => "https://${sub}.${var.domain_name}"
+  }
+}
+
+output "route53_name_servers" {
+  description = "NS à configurer chez votre registrar pour déléguer aws.remipetit.fr vers Route 53"
+  value       = aws_route53_zone.main.name_servers
+}
+
 output "ecs_cluster_names" {
   description = "Noms des clusters ECS"
   value = {
@@ -39,4 +51,28 @@ output "ecs_service_names" {
   value = {
     for env, svc in aws_ecs_service.app : env => svc.name
   }
+}
+
+output "aurora_endpoints" {
+  description = "Endpoints des instances RDS PostgreSQL"
+  value = {
+    for env, db in aws_db_instance.aurora : env => db.address
+  }
+}
+
+output "aurora_reader_endpoints" {
+  description = "Endpoints reader RDS (Multi-AZ prod uniquement)"
+  value = {
+    for env, db in aws_db_instance.aurora : env => db.address
+  }
+}
+
+output "aurora_database_name" {
+  description = "Nom de la base de données"
+  value       = replace(var.project, "-", "_")
+}
+
+output "aurora_master_username" {
+  description = "Utilisateur maître RDS"
+  value       = "dbadmin"
 }

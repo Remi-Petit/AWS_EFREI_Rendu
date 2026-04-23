@@ -15,5 +15,9 @@ variable "vpn_client_cidr" {
 }
 
 variable "admin_email" {
-  default = "admin@example.com"
+  default = "remi.petit@efrei.net"
+}
+
+variable "domain_name" {
+  default = "aws.remipetit.fr"
 }
