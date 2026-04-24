@@ -142,10 +142,12 @@ resource "aws_ecs_task_definition" "pgadmin" {
       protocol      = "tcp"
     }]
     environment = [
-      { name = "PGADMIN_DEFAULT_EMAIL",    value = var.pgadmin_email },
-      { name = "PGADMIN_DEFAULT_PASSWORD", value = random_password.pgadmin.result },
-      { name = "PGADMIN_LISTEN_PORT",      value = "80" },
-      { name = "SCRIPT_NAME",              value = "/pgadmin" }
+      { name = "PGADMIN_DEFAULT_EMAIL", value = var.pgadmin_email },
+      { name = "PGADMIN_LISTEN_PORT",   value = "80" },
+      { name = "SCRIPT_NAME",           value = "/pgadmin" }
+    ]
+    secrets = [
+      { name = "PGADMIN_DEFAULT_PASSWORD", valueFrom = "${aws_secretsmanager_secret.pgadmin.arn}:password::" },
     ]
     mountPoints = [{
       sourceVolume  = "pgadmin-data"

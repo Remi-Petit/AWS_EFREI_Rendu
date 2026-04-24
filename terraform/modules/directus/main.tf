@@ -20,6 +20,7 @@ resource "aws_secretsmanager_secret_version" "directus" {
     admin_password = random_password.directus_admin.result
     key            = random_uuid.directus_key.result
     secret         = random_uuid.directus_secret.result
+    db_password    = var.db_password
   })
 }
 
@@ -83,16 +84,12 @@ resource "aws_ecs_task_definition" "directus" {
     environment = [
       { name = "PUBLIC_URL",      value = "https://${var.hostname}" },
       { name = "ADMIN_EMAIL",     value = var.admin_email },
-      { name = "ADMIN_PASSWORD",  value = random_password.directus_admin.result },
-      { name = "KEY",             value = random_uuid.directus_key.result },
-      { name = "SECRET",          value = random_uuid.directus_secret.result },
       # Base PostgreSQL RDS
       { name = "DB_CLIENT",   value = "pg" },
       { name = "DB_HOST",     value = var.db_host },
       { name = "DB_PORT",     value = "5432" },
       { name = "DB_DATABASE", value = var.db_name },
       { name = "DB_USER",     value = var.db_username },
-      { name = "DB_PASSWORD", value = var.db_password },
       # Stockage S3
       { name = "STORAGE_LOCATIONS",         value = "s3" },
       { name = "STORAGE_DEFAULT",           value = "s3" },
@@ -100,6 +97,12 @@ resource "aws_ecs_task_definition" "directus" {
       { name = "STORAGE_S3_BUCKET",         value = var.s3_bucket },
       { name = "STORAGE_S3_REGION",         value = var.aws_region },
       { name = "STORAGE_S3_PUBLIC_URL",     value = "https://${var.s3_bucket}.s3.${var.aws_region}.amazonaws.com" }
+    ]
+    secrets = [
+      { name = "ADMIN_PASSWORD", valueFrom = "${aws_secretsmanager_secret.directus.arn}:admin_password::" },
+      { name = "KEY",            valueFrom = "${aws_secretsmanager_secret.directus.arn}:key::" },
+      { name = "SECRET",         valueFrom = "${aws_secretsmanager_secret.directus.arn}:secret::" },
+      { name = "DB_PASSWORD",    valueFrom = "${aws_secretsmanager_secret.directus.arn}:db_password::" },
     ]
     logConfiguration = {
       logDriver = "awslogs"
