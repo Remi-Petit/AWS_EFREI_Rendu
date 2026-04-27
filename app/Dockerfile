@@ -1,7 +1,3 @@
-FROM nginx:alpine
-
-COPY . /usr/share/nginx/html
+FROM nginxdemos/hello
 
 EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
