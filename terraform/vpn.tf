@@ -58,6 +58,12 @@ resource "aws_cloudwatch_log_group" "vpn" {
   tags              = { Environment = each.key }
 }
 
+resource "aws_cloudwatch_log_stream" "vpn" {
+  for_each       = local.env_config
+  name           = "${var.project}-${each.key}-vpn-connections"
+  log_group_name = aws_cloudwatch_log_group.vpn[each.key].name
+}
+
 resource "aws_ec2_client_vpn_network_association" "admin" {
   for_each = {
     for k, v in local.env_config : k => v

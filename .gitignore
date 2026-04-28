@@ -1,3 +1,6 @@
+# VPN certificates (private keys — never commit)
+vpn-certs/
+
 # Terraform
 .terraform/
 .terraform.lock.hcl
