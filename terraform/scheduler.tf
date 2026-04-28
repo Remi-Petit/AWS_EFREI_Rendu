@@ -46,8 +46,13 @@ resource "aws_iam_policy" "lambda_scheduler" {
     Statement = [
       {
         Effect = "Allow"
-        Action = ["ecs:ListServices", "ecs:UpdateService"]
-        Resource = "*"
+        Action = ["ecs:ListServices"]
+        Resource = aws_ecs_cluster.main["test"].arn
+      },
+      {
+        Effect = "Allow"
+        Action = ["ecs:UpdateService"]
+        Resource = "arn:aws:ecs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:service/${var.project}-test-cluster/*"
       },
       {
         Effect = "Allow"
@@ -55,7 +60,7 @@ resource "aws_iam_policy" "lambda_scheduler" {
           "rds:StopDBInstance", "rds:StartDBInstance",
           "rds:DescribeDBInstances"
         ]
-        Resource = "*"
+        Resource = aws_db_instance.aurora["test"].arn
       },
       {
         Effect = "Allow"

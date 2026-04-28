@@ -18,7 +18,7 @@ module "directus" {
   ecs_cluster_id     = aws_ecs_cluster.main[each.key].id
   https_listener_arn = aws_lb_listener.https[each.key].arn
   execution_role_arn = aws_iam_role.ecs_execution.arn
-  task_role_arn      = aws_iam_role.ecs_task.arn
+  task_role_arn      = aws_iam_role.ecs_task[each.key].arn
   admin_email        = var.admin_email
   hostname           = local.directus_subdomains[each.key]
   s3_bucket          = aws_s3_bucket.assets[each.key].bucket

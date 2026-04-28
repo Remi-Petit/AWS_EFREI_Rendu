@@ -32,8 +32,10 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
 }
 
 # ── ECS Task Role (permissions pour les containers applicatifs) ─────────────
+# Un rôle par environnement : chaque conteneur n'accède qu'à son propre bucket
 resource "aws_iam_role" "ecs_task" {
-  name = "${var.project}-ecs-task-role"
+  for_each = local.env_config
+  name     = "${var.project}-${each.key}-ecs-task-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -46,8 +48,9 @@ resource "aws_iam_role" "ecs_task" {
 }
 
 resource "aws_iam_role_policy" "ecs_task_s3" {
-  name = "${var.project}-ecs-task-s3"
-  role = aws_iam_role.ecs_task.id
+  for_each = local.env_config
+  name     = "${var.project}-${each.key}-ecs-task-s3"
+  role     = aws_iam_role.ecs_task[each.key].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -60,10 +63,8 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
         "s3:ListBucket"
       ]
       Resource = [
-        aws_s3_bucket.assets["prod"].arn,
-        "${aws_s3_bucket.assets["prod"].arn}/*",
-        aws_s3_bucket.assets["test"].arn,
-        "${aws_s3_bucket.assets["test"].arn}/*"
+        aws_s3_bucket.assets[each.key].arn,
+        "${aws_s3_bucket.assets[each.key].arn}/*"
       ]
     }]
   })
