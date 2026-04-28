@@ -23,20 +23,30 @@ Internet
 |---|---|
 | `provider.tf` | Configuration AWS provider |
 | `variables.tf` | Variables globales |
-| `locals.tf` | Config prod/test |
+| `locals.tf` | Config prod/test (CIDR, CPU, mémoire, scaling) |
 | `vpc.tf` | VPC, subnets (public/privé/admin), IGW, NAT, routes |
 | `nacl.tf` | Network ACLs (couche réseau) |
-| `security_groups.tf` | Security Groups (ALB, ECS, Admin) |
+| `security_groups.tf` | Security Groups (ALB, ECS, RDS, Admin) |
 | `iam.tf` | Rôles ECS, groupes IAM (admin/dev/readonly), password policy |
 | `secrets.tf` | AWS Secrets Manager |
+| `ecr.tf` | Dépôts ECR (scan on push, lifecycle 10 images) |
 | `ecs.tf` | Clusters, task definitions, services |
 | `alb.tf` | Application Load Balancer, target groups, listeners |
-| `autoscaling.tf` | Auto scaling CPU + mémoire |
+| `autoscaling.tf` | Auto scaling CPU (cible 60 %) + mémoire (cible 70 %) |
+| `aurora.tf` | Base de données PostgreSQL (RDS) |
+| `directus.tf` | Service Directus CMS (module ECS) |
+| `pgadmin.tf` | Interface pgAdmin (module ECS) |
+| `s3.tf` | Buckets S3 assets (versioning prod, lecture publique) |
+| `dns.tf` | Zone Route 53 + certificat ACM wildcard |
 | `waf.tf` | WAF (common rules, bot control, rate limiting) |
 | `vpn.tf` | AWS Client VPN (accès admin nomade) |
 | `cloudtrail.tf` | Audit de toutes les actions AWS |
 | `monitoring.tf` | Alarmes CloudWatch + SNS + Dashboard |
+| `scheduler.tf` | Arrêt/démarrage automatique env test via Lambda + EventBridge |
+| `budget.tf` | Budget mensuel AWS avec alerte email |
 | `outputs.tf` | URLs et informations utiles |
+| `modules/` | Modules réutilisables (directus, pgadmin, …) |
+| `lambda/` | Sources Python des Lambdas du scheduler |
 
 ## Déploiement
 
@@ -84,7 +94,7 @@ vpn_client_cert_arn = "arn:aws:acm:eu-west-3:XXXX:certificate/..."
 
 ## Sécurité réseau
 
-- **WAF** : règles communes AWS + bot control + rate limiting (500 req/5min)
+- **WAF** : règles communes AWS + bot control + rate limiting (2 000 req/5 min par IP)
 - **NACLs** : filtre réseau avant les security groups
 - **Security Groups** : ECS accepte uniquement le trafic depuis l'ALB
 - **Subnets admin** : réseau isolé, accès VPN uniquement

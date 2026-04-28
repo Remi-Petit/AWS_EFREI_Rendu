@@ -38,12 +38,16 @@ Les ressources suivantes doivent exister avant d'utiliser ces playbooks :
 ## Installation
 
 ```bash
+# Créer et activer le virtualenv Python attendu par ansible.cfg
+python3 -m venv ~/.venv/ansible
+source ~/.venv/ansible/bin/activate
+pip install boto3 botocore
+
 # Installer les collections Ansible AWS
 ansible-galaxy collection install -r requirements.yml
 
-# Sur Debian (WSL)
-sudo apt install python3-boto3 python3-botocore
-sudo apt install awscli
+# AWS CLI v2 (hors virtualenv)
+sudo apt install awscli   # ou utiliser le binaire officiel AWS
 ```
 
 ---
@@ -52,9 +56,10 @@ sudo apt install awscli
 
 ```
 ansible/
-├── ansible.cfg               # Configuration Ansible (roles path, stdout_callback)
-├── requirements.yml          # Collections : amazon.aws, community.aws
+├── ansible.cfg               # Configuration Ansible (roles path, stdout_callback, venv Python)
+├── requirements.yml          # Collections : amazon.aws, community.aws (>=7.0.0)
 ├── deploy.yml                # Playbook principal
+├── collections/              # Collections installées localement (ansible-galaxy)
 ├── group_vars/
 │   └── all.yml               # Variables globales (aws_region, project)
 └── roles/
